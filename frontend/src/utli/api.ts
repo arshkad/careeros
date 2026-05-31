@@ -51,3 +51,22 @@ export const deleteJob = (id) =>
   fetch(`${API_URL}/api/jobs/${id}`, {
     method: 'DELETE', headers: headers(),
   }).then((res) => { if (!res.ok) throw new Error('Delete failed'); });
+  
+// AI
+export const tailorResume = (resume, jobDescription) =>
+    fetch(`${API_URL}/api/ai/tailor-resume`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ resume, jobDescription }),
+    }).then(handleResponse);
+  
+  export const generateCoverLetter = (resume, jobDescription, company, role) =>
+    fetch(`${API_URL}/api/ai/cover-letter`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ resume, jobDescription, company, role }),
+    }).then(handleResponse);
+  
+  export const scoreJobMatch = (resume, jobDescription) =>
+    fetch(`${API_URL}/api/ai/match-score`, {
+      method: 'POST', headers: headers(),
+      body: JSON.stringify({ resume, jobDescription }),
+    }).then(handleResponse);
