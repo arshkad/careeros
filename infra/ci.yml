@@ -1,0 +1,70 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: careeros_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: cd backend && npm ci
+
+      - name: Run backend tests
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/careeros_test
+          JWT_SECRET: test_secret
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: cd backend && npm test
+
+      - name: Install frontend dependencies
+        run: cd frontend && npm ci
+
+      - name: Type check frontend
+        run: cd frontend && npx tsc --noEmit
+
+      - name: Build frontend
+        env:
+          VITE_API_URL: https://careeros-api.railway.app
+        run: cd frontend && npm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy backend to Railway
+        run: echo "Railway auto-deploys from GitHub — configure in Railway dashboard"
+
+      - name: Deploy frontend to Vercel
+        run: echo "Vercel auto-deploys from GitHub — configure in Vercel dashboard"
